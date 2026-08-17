@@ -1,0 +1,32 @@
+name: Coughy
+options:
+  bundleIdPrefix: com.coughy
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15"
+
+targets:
+  CoughyPhone:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: Sources/Phone
+        excludes:
+          - Resources/Info.plist
+          - Resources/Assets.xcassets
+      - path: Models/CoughCNN.mlpackage
+        type: file
+    resources:
+      - Sources/Phone/Resources/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.coughy
+        SWIFT_VERSION: "5.9"
+    info:
+      path: Sources/Phone/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Coughy
+        NSMicrophoneUsageDescription: "Coughy uses the microphone to monitor for coughs during sleep."
+        UIBackgroundModes:
+          - audio
