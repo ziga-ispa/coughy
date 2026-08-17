@@ -6,12 +6,11 @@ struct CoughyPhoneApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // DEV: always show onboarding; remove the `true ||` when ready for production
-            if true || hasCompletedOnboarding {
-                OnboardingContainerView()
-            } else {
-                CoughMonitorView()
+            if hasCompletedOnboarding {
+                MainTabView()
                     .environmentObject(CoughMonitorViewModel())
+            } else {
+                OnboardingContainerView()
             }
         }
     }

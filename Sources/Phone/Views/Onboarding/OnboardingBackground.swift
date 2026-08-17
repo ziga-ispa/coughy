@@ -12,6 +12,7 @@ extension Color {
     }
 
     static let brand = Color(hex: "FFD2D7")
+    static let deepNavy = Color(hex: "003451")
 }
 
 struct OnboardingBackground: ViewModifier {

@@ -2,14 +2,14 @@ name: Coughy
 options:
   bundleIdPrefix: com.coughy
   deploymentTarget:
-    iOS: "16.0"
-  xcodeVersion: "15"
+    iOS: "26.0"
+  xcodeVersion: "26.0"
 
 targets:
   CoughyPhone:
     type: application
     platform: iOS
-    deploymentTarget: "16.0"
+    deploymentTarget: "26.0"
     sources:
       - path: Sources/Phone
         excludes:
