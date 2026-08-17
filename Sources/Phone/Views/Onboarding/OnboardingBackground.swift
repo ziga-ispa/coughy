@@ -10,6 +10,8 @@ extension Color {
         let b = Double(int & 0xFF) / 255
         self.init(red: r, green: g, blue: b)
     }
+
+    static let brand = Color(hex: "FFD2D7")
 }
 
 struct OnboardingBackground: ViewModifier {
@@ -30,7 +32,7 @@ struct OnboardingNextButton: View {
                 .foregroundColor(.black)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(Color(hex: "E8A4A4"))
+                .background(Color.brand)
                 .clipShape(Capsule())
         }
         .padding(.horizontal, 32)
