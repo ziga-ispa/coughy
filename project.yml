@@ -14,11 +14,16 @@ targets:
       - path: Sources/Phone
         excludes:
           - Resources/Info.plist
-          - Resources/Assets.xcassets
+          - Resources/coughy.svg
+          - Resources/sleep.svg
       - path: Models/CoughCNN.mlpackage
         type: file
-    resources:
-      - Sources/Phone/Resources/Assets.xcassets
+    entitlements:
+      path: Sources/Phone/Resources/Coughy.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+    dependencies:
+      - sdk: HealthKit.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.coughy
@@ -28,5 +33,8 @@ targets:
       properties:
         CFBundleDisplayName: Coughy
         NSMicrophoneUsageDescription: "Coughy uses the microphone to monitor for coughs during sleep."
+        NSHealthShareUsageDescription: "Coughy reads Health data to correlate cough activity with your vitals."
+        NSHealthUpdateUsageDescription: "Coughy writes heart rate and weight data to Apple Health."
         UIBackgroundModes:
           - audio
+        UILaunchScreen: {}
