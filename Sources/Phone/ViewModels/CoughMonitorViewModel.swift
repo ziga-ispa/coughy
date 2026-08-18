@@ -8,6 +8,7 @@ final class CoughMonitorViewModel: ObservableObject {
     @Published private(set) var currentSession: CoughSession?
     @Published private(set) var events: [CoughEvent] = []
     @Published private(set) var errorMessage: String?
+    @Published private(set) var sessionNumber: Int = UserDefaults.standard.integer(forKey: "sessionCount")
 
     private var engine: CoughDetectionServiceProtocol?
 
@@ -22,6 +23,9 @@ final class CoughMonitorViewModel: ObservableObject {
 
         do {
             try e.start()
+            let next = UserDefaults.standard.integer(forKey: "sessionCount") + 1
+            UserDefaults.standard.set(next, forKey: "sessionCount")
+            sessionNumber = next
             currentSession = CoughSession(id: UUID(), startDate: Date(), events: [])
             events = []
             isMonitoring = true
