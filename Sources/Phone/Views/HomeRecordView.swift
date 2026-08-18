@@ -7,6 +7,8 @@ struct HomeRecordView: View {
     @State private var showTip = true
     @State private var pulse = false
     @State private var sensitivity = 1
+    @Environment(\.openURL) private var openURL
+    @State private var showHealthAlert = false
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -145,7 +147,7 @@ struct HomeRecordView: View {
 
                     // Log Symptoms button
                     Button {
-                        // placeholder
+                        showHealthAlert = true
                     } label: {
                         ZStack {
                             Text("Log Symptoms")

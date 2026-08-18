@@ -57,6 +57,12 @@ struct PermissionsHealthView: View {
             .padding(.bottom, 60)
         }
         .modifier(OnboardingBackground())
+                .task {
+                    // Munculkan dialog izin Apple Health begitu halaman tampil
+                    isRequesting = true
+                    try? await healthKit.requestAuthorization()
+                    isRequesting = false
+        }
     }
 
     private func requestHealth() async {
