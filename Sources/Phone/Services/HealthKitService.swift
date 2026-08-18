@@ -5,15 +5,19 @@ actor HealthKitService {
 
     private var shareTypes: Set<HKSampleType> {
         [
-            HKQuantityType(.heartRate),
-            HKQuantityType(.bodyMass)
+            HKCategoryType(.coughing),
+            HKCategoryType(.fever),
+            HKCategoryType(.runnyNose),
+            HKCategoryType(.soreThroat)
         ]
     }
 
     private var readTypes: Set<HKObjectType> {
         [
-            HKQuantityType(.heartRate),
-            HKQuantityType(.bodyMass)
+            HKCategoryType(.coughing),
+            HKCategoryType(.fever),
+            HKCategoryType(.runnyNose),
+            HKCategoryType(.soreThroat)
         ]
     }
 
