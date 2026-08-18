@@ -211,8 +211,6 @@ struct HomeRecordView: View {
                 }
             }
         }
-        .onReceive(timer) { now = $0 }
-        .onAppear { pulse = viewModel.isMonitoring }
         .alert("Log Symptoms in Apple Health to Sync with Coughie", isPresented: $showHealthAlert) {
             Button("Cancel", role: .destructive) { }
             Button("Open Health", role: .cancel) {
