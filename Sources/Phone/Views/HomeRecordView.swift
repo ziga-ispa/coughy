@@ -8,6 +8,7 @@ struct HomeRecordView: View {
     @State private var pulse = false
     @State private var sensitivity = 1
     @Environment(\.openURL) private var openURL
+    @State private var showHealthAlert = false
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -130,9 +131,7 @@ struct HomeRecordView: View {
 
                     // Log Symptoms button
                     Button {
-                        if let url = URL(string: "x-apple-health://") {
-                            openURL(url)
-                        }
+                        showHealthAlert = true
                     } label: {
                         ZStack {
                             Text("Log Symptoms")
@@ -198,6 +197,18 @@ struct HomeRecordView: View {
         }
         .onReceive(timer) { now = $0 }
         .onAppear { pulse = viewModel.isMonitoring }
+        .alert("Log Symptoms in Apple Health to Sync with Coughie", isPresented: $showHealthAlert) {
+            Button("Cancel", role: .destructive) { }
+            Button("Open Health", role: .cancel) {
+                if let url = URL(string: "x-apple-health://") {
+                    openURL(url)
+                }
+            }
+            .tint(.blue)
+        } message: {
+            Text("Symptoms will be synced for the report.")
+        }
+        .tint(.blue)
     }
 
     private func statusRow(icon: String, label: String) -> some View {
