@@ -18,10 +18,11 @@ targets:
           - Resources/sleep.svg
       - path: Models/CoughCNN.mlpackage
         type: file
-    entitlements:
-      path: Sources/Phone/Resources/Coughy.entitlements
-      properties:
-        com.apple.developer.healthkit: true
+    # di-comment agar tidak memerlukan developer account
+#    entitlements:
+#      path: Sources/Phone/Resources/Coughy.entitlements
+#      properties:
+#        com.apple.developer.healthkit: true
     dependencies:
       - sdk: HealthKit.framework
     settings:
