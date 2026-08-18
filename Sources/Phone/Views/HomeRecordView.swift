@@ -17,6 +17,9 @@ struct HomeRecordView: View {
             if viewModel.isMonitoring {
                 ActiveMonitorView()
                     .transition(.opacity)
+            } else if let session = viewModel.completedSession {
+                ResultView(session: session)
+                    .transition(.opacity)
             } else {
                 preRecordContent
                     .transition(.opacity)

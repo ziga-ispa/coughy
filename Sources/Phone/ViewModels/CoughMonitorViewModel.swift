@@ -6,6 +6,7 @@ final class CoughMonitorViewModel: ObservableObject {
 
     @Published private(set) var isMonitoring = false
     @Published private(set) var currentSession: CoughSession?
+    @Published private(set) var completedSession: CoughSession?
     @Published private(set) var events: [CoughEvent] = []
     @Published private(set) var errorMessage: String?
     @Published private(set) var sessionNumber: Int = UserDefaults.standard.integer(forKey: "sessionCount")
@@ -51,7 +52,12 @@ final class CoughMonitorViewModel: ObservableObject {
             session.endDate = Date()
             currentSession = session
             historyStore.save(session: session)
+            completedSession = session
         }
+    }
+
+    func dismissResult() {
+        completedSession = nil
     }
 
     // MARK: - Formatting (kept out of View layer)
