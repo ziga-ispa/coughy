@@ -211,6 +211,18 @@ struct HomeRecordView: View {
                 }
             }
         }
+        .alert("Log Symptoms in Apple Health to Sync with Coughie", isPresented: $showHealthAlert) {
+            Button("Cancel", role: .destructive) { }
+            Button("Open Health", role: .cancel) {
+                if let url = URL(string: "x-apple-health://") {
+                    openURL(url)
+                }
+            }
+            .tint(.blue)
+        } message: {
+            Text("Symptoms will be synced for the report.")
+        }
+        .tint(.blue)
     }
 
     private func statusRow(icon: String, label: String) -> some View {
