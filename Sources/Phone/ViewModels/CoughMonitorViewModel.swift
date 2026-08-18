@@ -11,6 +11,11 @@ final class CoughMonitorViewModel: ObservableObject {
     @Published private(set) var sessionNumber: Int = UserDefaults.standard.integer(forKey: "sessionCount")
 
     private var engine: CoughDetectionServiceProtocol?
+    private let historyStore: HistoryStore
+
+    init(historyStore: HistoryStore) {
+        self.historyStore = historyStore
+    }
 
     // MARK: - Session Control
 
@@ -43,7 +48,9 @@ final class CoughMonitorViewModel: ObservableObject {
         isMonitoring = false
         if var session = currentSession {
             session.events = events
+            session.endDate = Date()
             currentSession = session
+            historyStore.save(session: session)
         }
     }
 
