@@ -18,15 +18,19 @@ struct HealthDebugView: View {
                 }
 
                 Section("Langkah Uji") {
-                    Button("1. Minta Izin Health") { run { try await healthKit.requestAuthorization() }
-                        message: { "Izin diminta. Cek dialog / Settings > Health." } }
+                    Button("1. Minta Izin Health") {
+                        run(action: { try await healthKit.requestAuthorization() },
+                            message: { "Izin diminta. Cek dialog / Settings > Health." })
+                    }
 
-                    Button("2. Tulis Sampel Uji (batuk)") { run { try await healthKit.writeTestCough() }
-                        message: { "Berhasil menulis 1 sampel batuk ke Apple Health." } }
+                    Button("2. Tulis Sampel Uji (batuk)") {
+                        run(action: { try await healthKit.writeTestSample() },
+                            message: { "Berhasil menulis 1 sampel batuk ke Apple Health." })
+                    }
 
                     Button("3. Baca Data dari Health") {
-                        run { samples = try await healthKit.readCoughSymptoms(); didRead = true }
-                        message: { "Berhasil membaca \(samples.count) sampel." }
+                        run(action: { samples = try await healthKit.readSymptoms(); didRead = true },
+                            message: { "Berhasil membaca \(samples.count) sampel." })
                     }
                 }
                 .disabled(isBusy)
@@ -42,9 +46,10 @@ struct HealthDebugView: View {
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text("Batuk — \(s.severity)")
-                                    Text(s.date, style: .date) + Text(" ") + Text(s.date, style: .time)
+                                    Text(s.date, format: .dateTime.day().month().hour().minute())
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
                                 }
-                                .font(.subheadline)
                                 Spacer()
                                 Image(systemName: "checkmark.seal.fill")
                                     .foregroundStyle(.green)
@@ -57,10 +62,9 @@ struct HealthDebugView: View {
         }
     }
 
-    /// Helper kecil: jalankan aksi async, tangani error, update status.
-    private func run(_ action: @escaping () async throws -> Void,
-                     message: @escaping () -> String) {
-        Task {
+    private func run(action: @escaping @MainActor () async throws -> Void,
+                     message: @escaping @MainActor () -> String) {
+        Task { @MainActor in
             isBusy = true
             do {
                 try await action()
