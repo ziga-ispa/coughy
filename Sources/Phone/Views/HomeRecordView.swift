@@ -12,6 +12,20 @@ struct HomeRecordView: View {
 
     var body: some View {
         ZStack {
+            if viewModel.isMonitoring {
+                ActiveMonitorView()
+                    .transition(.opacity)
+            } else {
+                preRecordContent
+                    .transition(.opacity)
+            }
+        }
+        .onReceive(timer) { now = $0 }
+        .onAppear { pulse = viewModel.isMonitoring }
+    }
+
+    private var preRecordContent: some View {
+        ZStack {
             LinearGradient(
                 colors: [Color(hex: "7CABC5"), Color(hex: "3A6B85")],
                 startPoint: .top,
@@ -94,12 +108,14 @@ struct HomeRecordView: View {
                     .padding(.top, 32)
                     .padding(.bottom, 8)
                     .onTapGesture {
-                        if viewModel.isMonitoring {
-                            viewModel.stopSession()
-                            pulse = false
-                        } else {
-                            viewModel.startSession()
-                            pulse = true
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            if viewModel.isMonitoring {
+                                viewModel.stopSession()
+                                pulse = false
+                            } else {
+                                viewModel.startSession()
+                                pulse = true
+                            }
                         }
                     }
 
@@ -193,8 +209,6 @@ struct HomeRecordView: View {
                 }
             }
         }
-        .onReceive(timer) { now = $0 }
-        .onAppear { pulse = viewModel.isMonitoring }
     }
 
     private func statusRow(icon: String, label: String) -> some View {
