@@ -74,7 +74,7 @@ struct HomeRecordView: View {
                             .foregroundStyle(Color.deepNavy)
                             .frame(maxWidth: .infinity, alignment: .center)
                         }
-                        Image(systemName: "moon.zzz.fill")
+                        Image(systemName: timeIcon)
                             .font(.title)
                             .foregroundStyle(Color.brand)
                     }
@@ -142,11 +142,11 @@ struct HomeRecordView: View {
                         }
                     }
 
-                    // Moon status — outside card, centered
+                    // Time icon status — outside card, centered
                     HStack(spacing: 8) {
-                        Image(systemName: "moon.zzz.fill")
+                        Image(systemName: timeIcon)
                             .foregroundStyle(Color.brand)
-                        Text(viewModel.isMonitoring ? "Session active..." : "Ready for tonight's session")
+                        Text(viewModel.isMonitoring ? "Session active..." : statusLabel)
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundStyle(Color.brand)
                     }
@@ -264,6 +264,23 @@ struct HomeRecordView: View {
     }
 
     // MARK: - Computed
+
+    private var timeIcon: String {
+        let hour = Calendar.current.component(.hour, from: now)
+        switch hour {
+        case 5..<12:  return "sun.max.fill"
+        case 12..<17: return "cloud.sun.fill"
+        default:      return "moon.zzz.fill"
+        }
+    }
+
+    private var statusLabel: String {
+        let hour = Calendar.current.component(.hour, from: now)
+        switch hour {
+        case 5..<17: return "Ready to monitor"
+        default:     return "Ready for tonight's session"
+        }
+    }
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: now)

@@ -31,7 +31,7 @@ struct ResultView: View {
                             Image(systemName: "ellipsis")
                                 .font(.title2)
                                 .foregroundStyle(.white)
-                            Image(systemName: "cloud.sun.fill")
+                            Image(systemName: timeIcon)
                                 .font(.title2)
                                 .foregroundStyle(Color.brand)
                         }
@@ -157,6 +157,15 @@ struct ResultView: View {
     }
 
     // MARK: - Computed
+
+    private var timeIcon: String {
+        let hour = Calendar.current.component(.hour, from: now)
+        switch hour {
+        case 5..<12:  return "sun.max.fill"
+        case 12..<17: return "cloud.sun.fill"
+        default:      return "moon.zzz.fill"
+        }
+    }
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: now)

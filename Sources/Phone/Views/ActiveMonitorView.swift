@@ -45,7 +45,7 @@ struct ActiveMonitorView: View {
                         .background(Color.white.opacity(0.15))
                         .clipShape(Capsule())
 
-                        Image(systemName: "moon.zzz.fill")
+                        Image(systemName: timeIcon)
                             .font(.title2)
                             .foregroundStyle(Color.brand)
                             .padding(.leading, 8)
@@ -139,6 +139,15 @@ struct ActiveMonitorView: View {
                 }
                 .padding(.bottom, 12)
             }
+        }
+    }
+
+    private var timeIcon: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12:  return "sun.max.fill"
+        case 12..<17: return "cloud.sun.fill"
+        default:      return "moon.zzz.fill"
         }
     }
 
