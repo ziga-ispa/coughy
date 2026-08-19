@@ -14,6 +14,7 @@ final class CoughMonitorViewModel: ObservableObject {
     private var engine: CoughDetectionServiceProtocol?
     private let historyStore: HistoryStore
     private let healthKit = HealthKitService()
+    private let liveActivity = MonitoringLiveActivity()
 
     init(historyStore: HistoryStore) {
         self.historyStore = historyStore
@@ -33,10 +34,18 @@ final class CoughMonitorViewModel: ObservableObject {
             let next = UserDefaults.standard.integer(forKey: "sessionCount") + 1
             UserDefaults.standard.set(next, forKey: "sessionCount")
             sessionNumber = next
-            currentSession = CoughSession(id: UUID(), startDate: Date(), events: [])
+            
+            let start = Date()
+            currentSession = CoughSession(id: UUID(), startDate: start, events: [])
             events = []
             isMonitoring = true
             errorMessage = nil
+            
+            // Live Activity + tombol Stop dari widget
+            liveActivity.start(startDate: start)
+            MonitoringCoordinator.shared.stopHandler = { [weak self] in
+                self?.stopSession()
+            }
         } catch {
             errorMessage = "Could not start monitoring: \(error.localizedDescription)"
             engine = nil
@@ -48,15 +57,21 @@ final class CoughMonitorViewModel: ObservableObject {
         engine?.stop()
         engine = nil
         isMonitoring = false
+        
+        liveActivity.end()
+        MonitoringCoordinator.shared.stopHandler = nil
+        
         if var session = currentSession {
             session.events = events
             session.endDate = Date()
             currentSession = session
             historyStore.save(session: session)
             completedSession = session
+            
+            NotificationManager.notifyReportReady()   // report siap
         }
     }
-
+    
     func dismissResult() {
         completedSession = nil
     }
