@@ -6,6 +6,7 @@ struct HistoryView: View {
     @State private var showingExport = false
 
     var body: some View {
+        NavigationStack {
         ZStack {
             LinearGradient(
                 stops: [
@@ -73,8 +74,11 @@ struct HistoryView: View {
                                         .padding(.horizontal, 24)
 
                                     ForEach(section.sessions) { session in
-                                        SessionCardView(session: session)
-                                            .padding(.horizontal, 24)
+                                        NavigationLink(destination: SessionDetailView(session: session)) {
+                                            SessionCardView(session: session)
+                                                .padding(.horizontal, 24)
+                                        }
+                                        .buttonStyle(.plain)
                                     }
                                 }
                             }
@@ -107,6 +111,7 @@ struct HistoryView: View {
                 }
             }
         }
+        } // NavigationStack
     }
 
     // MARK: - Grouping

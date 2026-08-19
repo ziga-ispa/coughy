@@ -116,7 +116,7 @@ struct ResultView: View {
                     Spacer()
 
                     // View Report button
-                    NavigationLink(destination: ReportPlaceholderView()) {
+                    NavigationLink(destination: SessionDetailView(session: session)) {
                         Text("View Report")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(.black)
