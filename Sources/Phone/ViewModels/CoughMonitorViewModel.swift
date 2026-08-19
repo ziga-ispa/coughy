@@ -40,7 +40,7 @@ final class CoughMonitorViewModel: ObservableObject {
             events = []
             isMonitoring = true
             errorMessage = nil
-            
+
             // Live Activity + tombol Stop dari widget
             liveActivity.start(startDate: start)
             MonitoringCoordinator.shared.stopHandler = { [weak self] in

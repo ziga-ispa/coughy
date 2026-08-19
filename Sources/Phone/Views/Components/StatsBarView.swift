@@ -3,7 +3,7 @@ import SwiftUI
 struct StatsBarView: View {
     let events: [CoughEvent]
     let session: CoughSession?
-    let viewModel: CoughMonitorViewModel
+    @ObservedObject var viewModel: CoughMonitorViewModel
 
     var body: some View {
         let dry = events.filter { $0.type == .dry }.count

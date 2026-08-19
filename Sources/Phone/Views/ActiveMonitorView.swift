@@ -3,9 +3,6 @@ import UIKit
 
 struct ActiveMonitorView: View {
     @EnvironmentObject var viewModel: CoughMonitorViewModel
-    @State private var now = Date()
-
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ZStack {
@@ -65,16 +62,18 @@ struct ActiveMonitorView: View {
                         .padding(.horizontal, 24)
 
                     // Elapsed timer
-                    VStack(spacing: 4) {
-                        Text(elapsedString)
-                            .font(.system(size: 52, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Color.deepNavy)
-                        Text("ELAPSED TIME")
-                            .font(.system(size: 11, weight: .semibold))
-                            .tracking(2)
-                            .foregroundStyle(Color.deepNavy.opacity(0.65))
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        VStack(spacing: 4) {
+                            Text(elapsedString(at: context.date))
+                                .font(.system(size: 52, weight: .bold, design: .monospaced))
+                                .foregroundStyle(Color.deepNavy)
+                            Text("ELAPSED TIME")
+                                .font(.system(size: 11, weight: .semibold))
+                                .tracking(2)
+                                .foregroundStyle(Color.deepNavy.opacity(0.65))
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
                     }
-                    .frame(maxWidth: .infinity, alignment: .center)
 
                     // Acoustic feed + floating avatar
                     ZStack(alignment: .bottomTrailing) {
@@ -141,12 +140,11 @@ struct ActiveMonitorView: View {
                 .padding(.bottom, 12)
             }
         }
-        .onReceive(timer) { now = $0 }
     }
 
-    private var elapsedString: String {
-        let start = viewModel.currentSession?.startDate ?? now
-        let interval = max(0, Int(now.timeIntervalSince(start)))
+    private func elapsedString(at date: Date) -> String {
+        let start = viewModel.currentSession?.startDate ?? date
+        let interval = max(0, Int(date.timeIntervalSince(start)))
         let h = interval / 3600
         let m = (interval % 3600) / 60
         let s = interval % 60
