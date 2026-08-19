@@ -16,6 +16,7 @@ targets:
           - Resources/Info.plist
           - Resources/coughy.svg
           - Resources/sleep.svg
+      - path: Sources/Shared
       - path: Models/CoughCNN.mlpackage
         type: file
     # di-comment agar tidak memerlukan developer account
@@ -26,6 +27,7 @@ targets:
     dependencies:
       - sdk: HealthKit.framework
       - sdk: PDFKit.framework
+      - target: CoughyWidget
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.coughy
@@ -37,6 +39,25 @@ targets:
         NSMicrophoneUsageDescription: "Coughy uses the microphone to monitor for coughs during sleep."
         NSHealthShareUsageDescription: "Coughy reads Health data to correlate cough activity with your vitals."
         NSHealthUpdateUsageDescription: "Coughy writes heart rate and weight data to Apple Health."
+        NSSupportsLiveActivities: true
         UIBackgroundModes:
           - audio
         UILaunchScreen: {}
+
+  CoughyWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Sources/Widget
+      - path: Sources/Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.coughy.widget
+        SWIFT_VERSION: "5.9"
+    info:
+      path: Sources/Widget/Info.plist
+      properties:
+        CFBundleDisplayName: Coughy
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
