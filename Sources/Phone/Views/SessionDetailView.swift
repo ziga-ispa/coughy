@@ -18,44 +18,47 @@ struct SessionDetailView: View {
 
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 20) {
-                    // Header row
-                    HStack {
-                        Text(headerTitle)
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(Color(hex: "7CABC5"))
+                    VStack(alignment: .leading, spacing: 0) {
+                        // Header row
+                        HStack {
+                            Text(headerTitle)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(Color(hex: "7CABC5"))
 
-                        Spacer()
+                            Spacer()
 
-                        ShareLink(item: shareSummary) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.brand)
-                                    .frame(width: 44, height: 44)
-                                Image(systemName: "square.and.arrow.up")
-                                    .font(.body)
-                                    .foregroundStyle(Color(hex: "321613"))
-                                    .blendMode(.destinationOut)
-                                    .offset(y: -2)
+                            ShareLink(item: shareSummary) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.brand)
+                                        .frame(width: 44, height: 44)
+                                    Image(systemName: "square.and.arrow.up")
+                                        .font(.body)
+                                        .foregroundStyle(Color(hex: "321613"))
+                                        .blendMode(.destinationOut)
+                                        .offset(y: -2)
+                                }
+                                .compositingGroup()
                             }
-                            .compositingGroup()
-                        }
-                    }
-
-                    // Total count
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(alignment: .lastTextBaseline, spacing: 8) {
-                            Text("\(session.events.count)")
-                                .font(.system(size: 48, weight: .heavy))
-                                .foregroundStyle(Color(hex: "7CABC5"))
-
-                            Text("Total Coughs")
-                                .font(.system(size: 26, weight: .bold))
-                                .foregroundStyle(Color(hex: "7CABC5"))
                         }
 
-                        Text(timeRangeString)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.6))
+                        // Total count
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(alignment: .lastTextBaseline, spacing: 8) {
+                                Text("\(session.events.count)")
+                                    .font(.system(size: 48, weight: .heavy))
+                                    .foregroundStyle(Color(hex: "7CABC5"))
+
+                                Text("Total Coughs")
+                                    .font(.system(size: 26, weight: .bold))
+                                    .foregroundStyle(Color(hex: "7CABC5"))
+                            }
+
+                            Text(timeRangeString)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
+                        .padding(.top, -8)
                     }
 
                     // Hourly activity chart
