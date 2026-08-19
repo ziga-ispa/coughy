@@ -117,7 +117,11 @@ struct HomeRecordView: View {
                             .offset(y: 58)
                         }
                         .frame(width: 202, height: 202)
-                        .glassEffect(in: Circle())
+                        .background {
+                            Color.clear
+                                .glassEffect(in: Circle())
+                                .opacity(0.25)
+                        }
                         .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 1))
                         .shadow(color: .black.opacity(0.25), radius: 23, x: 0, y: 4)
                     }
@@ -215,7 +219,11 @@ struct HomeRecordView: View {
                             }
                             .padding(16)
                         }
-                        .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+                        .background {
+                            Color.clear
+                                .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+                                .opacity(0.25)
+                        }
                         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.2), lineWidth: 1))
                         .padding(.horizontal, 24)
                         .padding(.top, 16)

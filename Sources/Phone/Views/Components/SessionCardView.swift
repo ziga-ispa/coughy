@@ -51,7 +51,11 @@ struct SessionCardView: View {
             .padding(.vertical, 12)
         }
         .frame(width: 355, height: 165)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+        .background {
+            Color.clear
+                .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+                .opacity(0.25)
+        }
         .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.15), lineWidth: 1))
     }
 

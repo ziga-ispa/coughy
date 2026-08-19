@@ -39,7 +39,11 @@ struct ActiveEventRowView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 14))
+        .background {
+            Color.clear
+                .glassEffect(in: RoundedRectangle(cornerRadius: 14))
+                .opacity(0.25)
+        }
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.15), lineWidth: 1))
     }
 }
