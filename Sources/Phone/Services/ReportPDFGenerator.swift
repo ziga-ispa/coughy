@@ -60,6 +60,7 @@ struct ReportPDFGenerator {
 
     func makePDFData(
         sessions: [CoughSession],
+        symptoms: [SymptomRecord] = [],
         dateRange: ReportDateRange,
         generatedAt: Date = Date()
     ) throws -> Data {
@@ -113,7 +114,16 @@ struct ReportPDFGenerator {
                     accentColor: accent
                 )
             }
-
+            
+            canvas.drawSymptoms(
+                symptoms,
+                dateFormatter: dateFormatter,
+                titleColor: navy,
+                bodyColor: bodyColor,
+                secondaryColor: secondaryColor,
+                accentColor: accent
+            )
+            
             canvas.finishPage()
         }
     }
@@ -252,6 +262,57 @@ private struct PDFCanvas {
         }
 
         y += 13
+    }
+    
+    mutating func drawSymptoms(
+        _ symptoms: [SymptomRecord],
+        dateFormatter: DateFormatter,
+        titleColor: UIColor,
+        bodyColor: UIColor,
+        secondaryColor: UIColor,
+        accentColor: UIColor
+    ) {
+        ensureSpace(90)
+        y += 6
+        drawRule(color: accentColor, thickness: 2)
+        y += 11
+        
+        drawText(
+            "Symptoms (from Health app)",
+            font: .systemFont(ofSize: 14, weight: .bold),
+            color: titleColor,
+            spacingAfter: 8
+        )
+        
+        let order = ["Fever", "Runny Nose", "Sore Throat"]
+        let grouped = Dictionary(grouping: symptoms, by: { $0.name })
+        
+        for name in order {
+            drawText(
+                name,
+                font: .systemFont(ofSize: 12, weight: .semibold),
+                color: bodyColor,
+                spacingAfter: 4
+            )
+            
+            let entries = (grouped[name] ?? []).sorted { $0.date < $1.date }
+            if entries.isEmpty {
+                drawLines(
+                    ["    No entries in this period"],
+                    font: .systemFont(ofSize: 11),
+                    color: secondaryColor,
+                    lineSpacing: 4
+                )
+            } else {
+                drawLines(
+                    entries.map { "    \(dateFormatter.string(from: $0.date)) — \($0.severity)" },
+                    font: .systemFont(ofSize: 11),
+                    color: bodyColor,
+                    lineSpacing: 4
+                )
+            }
+            y += 8
+        }
     }
 
     mutating func drawText(

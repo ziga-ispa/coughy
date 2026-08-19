@@ -9,6 +9,9 @@ struct HomeRecordView: View {
     @State private var sensitivity = 1
     @Environment(\.openURL) private var openURL
     @State private var showHealthAlert = false
+    
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var secretTapCount = 0
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -44,9 +47,17 @@ struct HomeRecordView: View {
                     ZStack(alignment: .topTrailing) {
                         VStack(spacing: 2) {
                             Text(greeting)
-                                .font(.system(size: 36, weight: .bold))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.system(size: 36, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                secretTapCount += 1
+                                if secretTapCount >= 5 {
+                                    secretTapCount = 0
+                                    hasCompletedOnboarding = false
+                                }
+                            }
                             Text(formattedDate)
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundStyle(Color.deepNavy)
