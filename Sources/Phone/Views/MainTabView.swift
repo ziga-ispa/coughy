@@ -12,11 +12,6 @@ struct MainTabView: View {
                 .tabItem {
                     Label("History", systemImage: "clock.fill")
                 }
-
-            ProfileView()
-                .tabItem {
-                    Label("Profile", systemImage: "person.fill")
-                }
         }
         .tint(Color.brand)
     }
