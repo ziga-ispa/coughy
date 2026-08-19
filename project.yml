@@ -25,6 +25,7 @@ targets:
 #        com.apple.developer.healthkit: true
     dependencies:
       - sdk: HealthKit.framework
+      - sdk: PDFKit.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.coughy

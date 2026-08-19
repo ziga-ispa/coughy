@@ -98,7 +98,9 @@ struct HistoryView: View {
                 .disabled(historyStore.sessions.isEmpty)
                 .opacity(historyStore.sessions.isEmpty ? 0.5 : 1)
                 .sheet(isPresented: $showingExport) {
-                    ShareSheet(activityItems: [exportText])
+                    ExportReportView(sessions: historyStore.sessions)
+                        .presentationDetents([.large])
+                        .presentationDragIndicator(.visible)
                 }
             }
         }
@@ -159,42 +161,4 @@ struct HistoryView: View {
         return sections
     }
 
-    // MARK: - Export
-
-    private var exportText: String {
-        let sessions = historyStore.sessions.sorted { $0.startDate > $1.startDate }
-        guard !sessions.isEmpty else { return "No sessions recorded." }
-
-        let df = DateFormatter()
-        df.dateStyle = .medium
-        df.timeStyle = .short
-
-        var lines = ["Coughy — Session Report", "Generated: \(df.string(from: Date()))", ""]
-        for (i, s) in sessions.enumerated() {
-            let dur = Int(s.duration)
-            let h = dur / 3600; let m = (dur % 3600) / 60; let sec = dur % 60
-            let durStr = h > 0 ? "\(h)h \(m)m" : m > 0 ? "\(m)m \(sec)s" : "\(sec)s"
-            lines.append("Session \(i + 1)")
-            lines.append("  Date: \(df.string(from: s.startDate))")
-            lines.append("  Duration: \(durStr)")
-            lines.append("  Total coughs: \(s.events.count) (dry: \(s.dryCount), wet: \(s.wetCount))")
-            if let notes = s.notes, !notes.isEmpty {
-                lines.append("  Notes: \(notes)")
-            }
-            lines.append("")
-        }
-        return lines.joined(separator: "\n")
-    }
-}
-
-// MARK: - ShareSheet wrapper
-
-private struct ShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
