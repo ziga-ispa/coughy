@@ -84,34 +84,57 @@ struct ResultView: View {
                         .foregroundStyle(Color.deepNavy)
                         .frame(maxWidth: .infinity, alignment: .center)
 
-                    // Dry / Wet split
-                    HStack(spacing: 40) {
-                        VStack(spacing: 2) {
+                    // Dry / Wet / Confidence split
+                    HStack(spacing: 24) {
+                        VStack(spacing: 4) {
                             Text("\(session.dryCount)")
                                 .font(.system(size: 36, weight: .heavy))
                                 .foregroundStyle(Color.deepNavy)
                             Text("Dry")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(Color.deepNavy)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(Color.brand)
                         }
-                        VStack(spacing: 2) {
+                        
+                        Rectangle()
+                            .fill(Color.white.opacity(0.5))
+                            .frame(width: 1, height: 48)
+
+                        VStack(spacing: 4) {
                             Text("\(session.wetCount)")
                                 .font(.system(size: 36, weight: .heavy))
                                 .foregroundStyle(Color.brand)
                             Text("Wet")
-                                .font(.system(size: 18, weight: .semibold))
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(Color.brand)
+                        }
+                        
+                        Rectangle()
+                            .fill(Color.white.opacity(0.5))
+                            .frame(width: 1, height: 48)
+
+                        VStack(spacing: 4) {
+                            Text("\(averageConfidence)%")
+                                .font(.system(size: 36, weight: .heavy))
+                                .foregroundStyle(Color.deepNavy)
+                            Text("Confidence")
+                                .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(Color.brand)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 16)
+                    .padding(.top, 24)
 
                     // Duration
-                    Text(durationString)
-                        .font(.system(size: 36, weight: .heavy, design: .monospaced))
-                        .foregroundStyle(Color.deepNavy)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 24)
+                    VStack(spacing: 4) {
+                        Text(durationString)
+                            .font(.system(size: 36, weight: .heavy, design: .monospaced))
+                            .foregroundStyle(Color.deepNavy)
+                        Text("ELAPSED TIME")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(Color.deepNavy)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 40)
 
                     Spacer()
 
@@ -176,5 +199,11 @@ struct ResultView: View {
         let m = (total % 3600) / 60
         let s = total % 60
         return String(format: "%02d:%02d:%02d", h, m, s)
+    }
+
+    private var averageConfidence: Int {
+        guard !session.events.isEmpty else { return 0 }
+        let total = session.events.reduce(0.0) { $0 + $1.confidence }
+        return Int((total / Double(session.events.count)) * 100)
     }
 }
