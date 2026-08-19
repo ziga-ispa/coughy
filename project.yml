@@ -19,10 +19,10 @@ targets:
       - path: Models/CoughCNN.mlpackage
         type: file
     # di-comment agar tidak memerlukan developer account
-#    entitlements:
-#      path: Sources/Phone/Resources/Coughy.entitlements
-#      properties:
-#        com.apple.developer.healthkit: true
+    entitlements:
+      path: Sources/Phone/Resources/Coughy.entitlements
+      properties:
+        com.apple.developer.healthkit: true
     dependencies:
       - sdk: HealthKit.framework
       - sdk: PDFKit.framework

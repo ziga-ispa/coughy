@@ -17,6 +17,7 @@ struct ExportReportView: View {
     @State private var isGenerating = false
     @State private var errorMessage: String?
     @State private var showingError = false
+    private let healthKit = HealthKitService()
 
     init(sessions: [CoughSession], now: Date = Date(), calendar: Calendar = .current) {
         self.sessions = sessions
@@ -197,31 +198,46 @@ struct ExportReportView: View {
 
     private func generatePreview() {
         guard !matchingSessions.isEmpty, !isGenerating else { return }
-
+        
         isGenerating = true
         removePreviewFile()
-
+        
         let generator = ReportPDFGenerator()
         let range = selectedRange
         let sessionsForReport = matchingSessions
-
-        do {
-            let data = try generator.makePDFData(sessions: sessionsForReport, dateRange: range)
-            let url = generator.temporaryURL(for: range)
-            try data.write(to: url, options: .atomic)
-
-            guard let document = PDFDocument(url: url), document.pageCount > 0 else {
-                try? FileManager.default.removeItem(at: url)
-                throw ReportPDFGenerator.GenerationError.invalidPDF
+        
+        Task {
+            let symptoms = (try? await healthKit.fetchSymptoms(
+                from: range.startDate,
+                to: range.endExclusive
+            )) ?? []
+            
+            do {
+                let data = try generator.makePDFData(
+                    sessions: sessionsForReport,
+                    symptoms: symptoms,
+                    dateRange: range
+                )
+                let url = generator.temporaryURL(for: range)
+                try data.write(to: url, options: .atomic)
+                
+                guard let document = PDFDocument(url: url), document.pageCount > 0 else {
+                    try? FileManager.default.removeItem(at: url)
+                    throw ReportPDFGenerator.GenerationError.invalidPDF
+                }
+                
+                await MainActor.run {
+                    previewURL = url
+                    isGenerating = false
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                    showingError = true
+                    isGenerating = false
+                }
             }
-
-            previewURL = url
-        } catch {
-            errorMessage = error.localizedDescription
-            showingError = true
         }
-
-        isGenerating = false
     }
 
     private func removePreviewFile() {
