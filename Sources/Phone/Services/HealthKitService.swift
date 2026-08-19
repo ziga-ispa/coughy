@@ -65,6 +65,31 @@ actor HealthKitService {
         return records.sorted { $0.date < $1.date }
     }
     
+    func saveCough(_ event: CoughEvent) async {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+        
+        let type = HKCategoryType(.coughing)
+        
+        // Hanya tulis kalau user memang mengizinkan write untuk Coughing
+        guard store.authorizationStatus(for: type) == .sharingAuthorized else { return }
+        
+        let sample = HKCategorySample(
+            type: type,
+            value: HKCategoryValueSeverity.unspecified.rawValue, // "present", severity tak dispesifikasikan
+            start: event.timestamp,
+            end: event.timestamp,
+            metadata: [
+                "CoughyType": event.type.rawValue,      // "dry" / "wet"
+                "CoughyDryScore": event.dryScore,
+                "CoughyWetScore": event.wetScore,
+                "CoughyConfidence": event.confidence,
+                HKMetadataKeyWasUserEntered: false
+            ]
+        )
+        
+        try? await store.save(sample)
+    }
+    
     private func categorySamples(
         of type: HKCategoryType,
         predicate: NSPredicate

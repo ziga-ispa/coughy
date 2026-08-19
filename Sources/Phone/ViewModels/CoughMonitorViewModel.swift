@@ -13,6 +13,7 @@ final class CoughMonitorViewModel: ObservableObject {
 
     private var engine: CoughDetectionServiceProtocol?
     private let historyStore: HistoryStore
+    private let healthKit = HealthKitService()
 
     init(historyStore: HistoryStore) {
         self.historyStore = historyStore
@@ -91,6 +92,9 @@ extension CoughMonitorViewModel: CoughDetectionServiceDelegate {
             guard let self else { return }
             self.events.insert(event, at: 0)
             self.currentSession?.events = self.events
+
+            // Otomatis tulis ke Health app setiap ada batuk terdeteksi
+            await self.healthKit.saveCough(event)
         }
     }
 }
