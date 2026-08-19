@@ -133,10 +133,15 @@ struct SessionDetailView: View {
             Button {
                 withAnimation { showInsights = false }
             } label: {
-                Image(systemName: "xmark")
-                    .font(.caption.bold())
-                    .foregroundStyle(.white.opacity(0.7))
-                    .padding(10)
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.25))
+                        .frame(width: 28, height: 28)
+                    Image(systemName: "xmark")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white)
+                }
+                .padding(10)
             }
         }
     }
