@@ -2,7 +2,7 @@ import SwiftUI
 
 struct HistoryView: View {
     @EnvironmentObject var historyStore: HistoryStore
-    @State private var searchText = ""
+    @State private var selectedTimeRange: TimeRange = .allTime
     @State private var showingExport = false
 
     var body: some View {
@@ -27,35 +27,49 @@ struct HistoryView: View {
                     .padding(.top, 20)
                     .padding(.bottom, 12)
 
-                // Search bar
-                HStack(spacing: 12) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.white.opacity(0.6))
-                    TextField("Search", text: $searchText)
-                        .font(.system(size: 18))
-                        .foregroundStyle(.white)
-                        .tint(.white)
-                    if !searchText.isEmpty {
-                        Button { searchText = "" } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.white.opacity(0.6))
+                // Time range filter
+                Menu {
+                    ForEach(TimeRange.allCases) { range in
+                        Button {
+                            selectedTimeRange = range
+                        } label: {
+                            HStack {
+                                Text(range.title)
+                                if selectedTimeRange == range {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
                         }
                     }
-                    Image(systemName: "mic")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.white.opacity(0.6))
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "calendar.badge.clock")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.white.opacity(0.7))
+
+                        Text(selectedTimeRange.title)
+                            .font(.system(size: 18))
+                            .foregroundStyle(.white)
+
+                        Spacer()
+
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.7))
+                    }
+                    .padding(.horizontal, 20)
+                    .frame(width: 354, height: 44)
+                    .background(Color.white.opacity(0.15))
+                    .clipShape(Capsule())
                 }
-                .padding(.horizontal, 20)
-                .frame(width: 354, height: 44)
-                .background(Color.white.opacity(0.15))
-                .clipShape(Capsule())
+                .accessibilityLabel("Time range")
+                .accessibilityValue(selectedTimeRange.title)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, 16)
 
                 if weekSections.isEmpty {
                     Spacer()
-                    Text("No sessions recorded yet.\nStart monitoring to track your coughs.")
+                    Text(emptyStateMessage)
                         .font(.system(size: 15))
                         .foregroundStyle(.white.opacity(0.7))
                         .multilineTextAlignment(.center)
@@ -122,15 +136,51 @@ struct HistoryView: View {
         var sessions: [CoughSession]
     }
 
+    private enum TimeRange: String, CaseIterable, Identifiable {
+        case allTime
+        case today
+        case last7Days
+        case last30Days
+
+        var id: Self { self }
+
+        var title: String {
+            switch self {
+            case .allTime: return "All time"
+            case .today: return "Today"
+            case .last7Days: return "Last 7 days"
+            case .last30Days: return "Last 30 days"
+            }
+        }
+
+        var startDate: Date? {
+            let calendar = Calendar.current
+            let startOfToday = calendar.startOfDay(for: Date())
+
+            switch self {
+            case .allTime:
+                return nil
+            case .today:
+                return startOfToday
+            case .last7Days:
+                return calendar.date(byAdding: .day, value: -6, to: startOfToday)
+            case .last30Days:
+                return calendar.date(byAdding: .day, value: -29, to: startOfToday)
+            }
+        }
+    }
+
     private var filteredSessions: [CoughSession] {
         let sorted = historyStore.sessions.sorted { $0.startDate > $1.startDate }
-        guard !searchText.isEmpty else { return sorted }
-        let query = searchText.lowercased()
-        return sorted.filter { session in
-            let f = DateFormatter()
-            f.dateFormat = "EEE, MMM d"
-            return f.string(from: session.startDate).lowercased().contains(query)
+        guard let startDate = selectedTimeRange.startDate else { return sorted }
+        return sorted.filter { $0.startDate >= startDate }
+    }
+
+    private var emptyStateMessage: String {
+        if historyStore.sessions.isEmpty {
+            return "No sessions recorded yet.\nStart monitoring to track your coughs."
         }
+        return "No sessions in this time range.\nTry selecting a wider range to see more sessions."
     }
 
     private var weekSections: [WeekSection] {
