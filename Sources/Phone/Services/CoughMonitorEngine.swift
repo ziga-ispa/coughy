@@ -48,7 +48,7 @@ final class CoughMonitorEngine: CoughDetectionServiceProtocol {
     private var noiseFloor: Float = 0.02
     private var gate: Float = 0.02
 
-    private typealias PendingWindow = (timestamp: Date, rms: Float, dry: Double, wet: Double)
+    private typealias PendingWindow = (timestamp: Date, rms: Float, dry: Double, wet: Double, samples: [Float])
     private var pendingWindows = [PendingWindow]()
     private var lastWindowTimestamp: Date?
 
@@ -185,7 +185,7 @@ final class CoughMonitorEngine: CoughDetectionServiceProtocol {
         if let last = lastWindowTimestamp, now.timeIntervalSince(last) > groupingGap {
             flushGroup()
         }
-        pendingWindows.append((now, rms, dry, wet))
+        pendingWindows.append((now, rms, dry, wet, samples))
         lastWindowTimestamp = now
     }
 
@@ -193,15 +193,22 @@ final class CoughMonitorEngine: CoughDetectionServiceProtocol {
         guard !pendingWindows.isEmpty else { return }
         let peak = pendingWindows.max(by: { $0.rms < $1.rms })!
         let type: CoughEvent.CoughType = peak.dry >= peak.wet ? .dry : .wet
+        let id = UUID()
+
+        // Gabungkan sampel seluruh burst (urut sesuai perekaman) → tulis 1 klip.
+        let clipSamples = pendingWindows.flatMap { $0.samples }
+        let filename = writeClip(samples: clipSamples, id: id)
+
         let event = CoughEvent(
-            id: UUID(),
+            id: id,
             timestamp: peak.timestamp,
             type: type,
             dryScore: peak.dry,
             wetScore: peak.wet,
             confidence: max(peak.dry, peak.wet),
             peakRMS: peak.rms,
-            windowCount: pendingWindows.count
+            windowCount: pendingWindows.count,
+            audioClipFilename: filename
         )
         pendingWindows.removeAll()
         DispatchQueue.main.async { [weak self] in
@@ -302,6 +309,33 @@ final class CoughMonitorEngine: CoughDetectionServiceProtocol {
             domain: "CoughMonitorEngine", code: 1,
             userInfo: [NSLocalizedDescriptionKey:
                 "CoughCNN model not found in bundle (expected CoughCNN.mlmodelc or CoughCNN.mlpackage)"])
+    }
+    
+    static var clipsDirectory: URL {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let dir = docs.appendingPathComponent("CoughClips", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    private func writeClip(samples: [Float], id: UUID) -> String? {
+        guard !samples.isEmpty, let fmt = monoFormat else { return nil }
+        let filename = id.uuidString + ".caf"
+        let url = Self.clipsDirectory.appendingPathComponent(filename)
+        guard let buf = AVAudioPCMBuffer(pcmFormat: fmt,
+                                         frameCapacity: AVAudioFrameCount(samples.count)) else { return nil }
+        buf.frameLength = AVAudioFrameCount(samples.count)
+        if let ch = buf.floatChannelData?[0] {
+            samples.withUnsafeBufferPointer { ch.update(from: $0.baseAddress!, count: samples.count) }
+        }
+        do {
+            let file = try AVAudioFile(forWriting: url, settings: fmt.settings)
+            try file.write(from: buf)
+            return filename
+        } catch {
+            print("writeClip failed: \(error)")
+            return nil
+        }
     }
 
     private func pf(_ v: Float) -> String { String(format: "%.4f", v) }

@@ -1,9 +1,9 @@
 import SwiftUI
+import AVFoundation
 
 struct DetectedEventRow: View {
     let event: CoughEvent
-    @State private var isPlaying = false
-    @State private var animationPhase: CGFloat = 0
+    @StateObject private var player = ClipPlayer()
 
     private let timeFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -12,69 +12,50 @@ struct DetectedEventRow: View {
         return f
     }()
 
+    private var hasClip: Bool {
+        guard let name = event.audioClipFilename,
+              let url = ClipPlayer.clipURL(name) else { return false }
+        return FileManager.default.fileExists(atPath: url.path)
+    }
+
     var body: some View {
         HStack(spacing: 12) {
-            // Play/pause button
+            // Tombol play/pause sungguhan
             Button {
-                isPlaying.toggle()
-                if isPlaying {
-                    withAnimation(.easeInOut(duration: 0.4).repeatForever(autoreverses: true)) {
-                        animationPhase = 1
-                    }
-                } else {
-                    withAnimation(.default) {
-                        animationPhase = 0
-                    }
-                }
+                player.toggle(filename: event.audioClipFilename)
             } label: {
                 ZStack {
                     Circle()
                         .fill(Color(hex: "F19DA7"))
                         .frame(width: 44, height: 44)
-                    if isPlaying {
-                        HStack(spacing: 3) {
-                            ForEach(0..<4, id: \.self) { i in
-                                RoundedRectangle(cornerRadius: 2)
-                                    .fill(Color(hex: "F19DA7"))
-                                    .frame(width: 3, height: CGFloat([10, 16, 12, 8][i]) * (1 + animationPhase * 0.5))
-                                    .animation(
-                                        .easeInOut(duration: 0.3 + Double(i) * 0.1).repeatForever(autoreverses: true),
-                                        value: animationPhase
-                                    )
-                            }
-                        }
-                    } else {
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
+                    Image(systemName: hasClip ? (player.isPlaying ? "pause.fill" : "play.fill") : "waveform")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.white)
                 }
             }
             .buttonStyle(.plain)
+            .disabled(!hasClip)
 
-            // Time + waveform
+            // Waktu + waveform (bar terisi mengikuti progres, bukan animasi tak berujung)
             VStack(alignment: .leading, spacing: 4) {
                 Text(timeFormatter.string(from: event.timestamp))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.white)
 
                 HStack(spacing: 3) {
-                    let heights: [CGFloat] = waveformHeights(rms: event.peakRMS)
-                    ForEach(0..<4, id: \.self) { i in
+                    let heights = waveformHeights(rms: event.peakRMS)
+                    ForEach(heights.indices, id: \.self) { i in
+                        let played = player.progress >= Double(i + 1) / Double(heights.count)
                         RoundedRectangle(cornerRadius: 2)
-                            .fill(Color(hex: "F19DA7").opacity(0.7))
-                            .frame(width: 3, height: isPlaying ? heights[i] * (1 + animationPhase * 0.6) : heights[i])
-                            .animation(
-                                .easeInOut(duration: 0.25 + Double(i) * 0.08).repeatForever(autoreverses: true),
-                                value: isPlaying ? animationPhase : 0
-                            )
+                            .fill(Color(hex: "F19DA7").opacity(player.isPlaying && played ? 1.0 : 0.7))
+                            .frame(width: 3, height: heights[i])
                     }
                 }
+                .animation(.linear(duration: 0.08), value: player.progress)
             }
 
             Spacer()
 
-            // Type badge
             Text(event.type == .wet ? "Wet" : "Dry")
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(event.type == .wet ? Color(hex: "A0BB6E") : Color(hex: "BCD2DE"))
@@ -87,7 +68,6 @@ struct DetectedEventRow: View {
                 )
                 .clipShape(Capsule())
 
-            // Duration
             Text(durationString)
                 .font(.system(size: 14, weight: .regular, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.7))
@@ -96,17 +76,95 @@ struct DetectedEventRow: View {
         .padding(.vertical, 12)
         .background(Color(hex: "D9D9D9").opacity(0.15))
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .onDisappear { player.stop() }
     }
 
     private func waveformHeights(rms: Float) -> [CGFloat] {
         let base = CGFloat(max(4, min(20, Double(rms) * 200)))
-        return [base * 0.6, base, base * 0.8, base * 0.5]
+        return [0.55, 1.0, 0.75, 0.9, 0.5].map { base * $0 }
     }
 
+    // 0.6 s / window (LogMelProcessor). Satu desimal supaya tak pernah "0:00".
     private var durationString: String {
-        let seconds = Double(event.windowCount) * 0.05
-        let s = Int(seconds) % 60
-        let m = Int(seconds) / 60
-        return String(format: "%d:%02d", m, s)
+        let seconds = Double(max(event.windowCount, 1)) * 0.6
+        if seconds < 60 { return String(format: "%.1fs", seconds) }
+        let total = Int(seconds.rounded())
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
+}
+
+// MARK: - Pemutar klip
+
+final class ClipPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
+    @Published var isPlaying = false
+    @Published var progress: Double = 0     // 0...1
+
+    private var player: AVAudioPlayer?
+    private var timer: Timer?
+
+    func toggle(filename: String?) {
+        isPlaying ? pause() : play(filename: filename)
+    }
+
+    private func play(filename: String?) {
+        if player == nil {
+            guard let filename,
+                  let url = Self.clipURL(filename),
+                  FileManager.default.fileExists(atPath: url.path) else { return }
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
+                try AVAudioSession.sharedInstance().setActive(true)
+                let p = try AVAudioPlayer(contentsOf: url)
+                p.delegate = self
+                p.prepareToPlay()
+                player = p
+            } catch {
+                print("ClipPlayer load failed: \(error)")
+                return
+            }
+        }
+        player?.play()
+        isPlaying = true
+        startTimer()
+    }
+
+    func pause() {
+        player?.pause()
+        isPlaying = false
+        stopTimer()
+    }
+
+    func stop() {
+        player?.stop()
+        player = nil
+        isPlaying = false
+        progress = 0
+        stopTimer()
+    }
+
+    private func startTimer() {
+        stopTimer()
+        timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+            guard let self, let p = self.player, p.duration > 0 else { return }
+            self.progress = p.currentTime / p.duration
+        }
+    }
+
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        isPlaying = false
+        progress = 0
+        stopTimer()
+    }
+
+    static func clipURL(_ filename: String) -> URL? {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        return docs?
+            .appendingPathComponent("CoughClips", isDirectory: true)
+            .appendingPathComponent(filename)
     }
 }

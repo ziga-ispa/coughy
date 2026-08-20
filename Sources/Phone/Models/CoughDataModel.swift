@@ -10,6 +10,7 @@ struct CoughEvent: Identifiable, Codable {
     let confidence: Double
     let peakRMS: Float
     let windowCount: Int
+    var audioClipFilename: String? = nil
 }
 
 struct CoughFit {
